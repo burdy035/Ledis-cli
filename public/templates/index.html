@@ -87,7 +87,8 @@
                                         self.addNewCommand(e);
                                     })
                                     .catch(function(error) {
-                                        self.commands[index].result = "Error";
+                                        self.commands[index].result =
+                                            "(error) " + error.message;
                                         self.addNewCommand(e);
                                     });
                             });
@@ -101,7 +102,8 @@
                                     self.addNewCommand(e);
                                 })
                                 .catch(function(error) {
-                                    self.commands[index].result = "Error";
+                                    self.commands[index].result =
+                                        "(error) " + error.message;
                                     self.addNewCommand(e);
                                 });
                         }
