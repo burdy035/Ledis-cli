@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+        <meta charset="utf-8" />
+        <title>Ledis</title>
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <script src="js/html2canvas.min.js"></script>
+
+        <link rel="stylesheet" href="css/styles.css" type="text/css" />
+        <link rel="shortcut icon" href="#" />
+    </head>
+    <body>
+        <div id="app" class="a">
+            <div class="container" v-on:click="focusTerminal">
+                <div
+                    v-for="(c, index) in commands"
+                    v-if="!c.deleted"
+                    id="input-line"
+                    class="input-line"
+                    :key="c.id"
+                >
+                    <div class="command-container">
+                        <div class="prompt">{{ user }}</div>
+
+                        <input
+                            ref="fields"
+                            class="command-line"
+                            v-model="c.command"
+                            v-on:keyup="processNewCommand($event, index)"
+                            v-focus
+                            value="c.commands"
+                        />
+                    </div>
+                    <div v-show="c.result" class="cmd-result">
+                        <span v-html="c.result"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+
+    <script>
+        var app = new Vue({
+            el: "#app",
+            data: {
+                user: "[localhost@user] $ ",
+                commands: [],
+                i: 0,
+                historyCount: 0,
+                commandUpStack: [],
+                commanDownStack: []
+            },
+            mounted: function() {
+                this.commands.push({
+                    id: this.i,
+                    command: null,
+                    res: null,
+                    result: null,
+                    deleted: false
+                });
+                this.i += 1;
+            },
+            methods: {
+                processNewCommand: function(e, index) {
+                    self = this;
+                    if (e.keyCode === 13) {
+                        var syntax = self.commands[index].command;
+
+                        var body = {
+                            cmdLine: syntax
+                        };
+
+                        if (syntax === "save") {
+                            html2canvas(document.body, {}).then(function(
+                                canvas
+                            ) {
+                                body.screenshot = canvas.toDataURL("image/png");
+
+                                axios
+                                    .post("/send-command", body)
+                                    .then(function(res) {
+                                        self.commands[index]["result"] =
+                                            res.data.result;
+
+                                        self.addNewCommand(e);
+                                    })
+                                    .catch(function(error) {
+                                        self.commands[index].result = "Error";
+                                        self.addNewCommand(e);
+                                    });
+                            });
+                        } else {
+                            axios
+                                .post("/send-command", body)
+                                .then(function(res) {
+                                    self.commands[index]["result"] =
+                                        res.data.result;
+
+                                    self.addNewCommand(e);
+                                })
+                                .catch(function(error) {
+                                    self.commands[index].result = "Error";
+                                    self.addNewCommand(e);
+                                });
+                        }
+                    } else if (e.keyCode === 38) {
+                        let historyCommand = this.commandUpStack.pop();
+                        if (historyCommand) {
+                            let currentCommand = this.commands[
+                                this.commands.length - 1
+                            ];
+                            let clone = Object.assign({}, currentCommand);
+                            currentCommand.command = historyCommand.command;
+                            this.commanDownStack.push(clone);
+                        }
+                    } else if (e.keyCode === 40) {
+                        let historyCommand = this.commanDownStack.pop();
+
+                        if (historyCommand) {
+                            let currentCommand = this.commands[
+                                this.commands.length - 1
+                            ];
+
+                            let clone = Object.assign({}, currentCommand);
+
+                            currentCommand.command = historyCommand.command;
+
+                            this.commandUpStack.push(clone);
+                        }
+                    }
+                },
+                focusTerminal: function() {
+                    var visibleCmds = this.commands.filter(c => !c.deleted)
+                        .length;
+                    this.$refs.fields[visibleCmds - 1].focus();
+                },
+                addNewCommand: function(e) {
+                    if (e.target.value === "clear") {
+                        this.commands = this.commands.map(c => {
+                            c.deleted = true;
+                            return c;
+                        });
+                    }
+                    this.commands.push({
+                        id: this.i,
+                        command: null,
+                        res: null,
+                        result: null
+                    });
+
+                    this.i += 1;
+                    this.commandUpStack = this.commands.slice(
+                        0,
+                        this.commands.length - 1
+                    );
+                    this.commanDownStack = [];
+                }
+            }
+        });
+
+        Vue.directive("focus", {
+            inserted: function(el) {
+                el.focus();
+            }
+        });
+    </script>
+</html>
