@@ -72,7 +72,7 @@ app.post("/send-command", (req, res) => {
     }
 });
 
-app.listen(process.env.SERVER_PORT || port, err => {
+app.listen(process.env.PORT || port, err => {
     if (err) {
         console.log(
             `Can not listen at http://localhost:${process.env.SERVER_PORT ||
