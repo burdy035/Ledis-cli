@@ -57,10 +57,18 @@ class Data {
     }
 
     expire(key, second) {
+        second = parseInt(second);
         let tmp = this.data[key];
-        if (tmp) {
-            tmp["ttl"] = new Date().getTime() + second * 1000;
-            this.watchedKeys[key] = true;
+        if (tmp && !Number.isInteger(second)) {
+            return "(error) seconds must be interger";
+        } else if (tmp && Number.isInteger(second)) {
+            if (second <= 0) {
+                delete this.data[key];
+            } else {
+                tmp["ttl"] = new Date().getTime() + second * 1000;
+                this.watchedKeys[key] = true;
+            }
+
             return "(interger) 1";
         } else {
             return "(interger) 0";
@@ -171,7 +179,7 @@ class Data {
         if (!Number.isInteger(start) || !Number.isInteger(stop)) {
             result = "(error) start or stop value is not an integer";
         } else if (start < 0 || stop < 0) {
-            result = "(empty list)";
+            result = "(error) arguments must be non-negative interger";
         } else {
             if (tmp && tmp["type"] === "list") {
                 let lrange = tmp["value"].slice(start, stop + 1);
@@ -230,10 +238,10 @@ class Data {
 
         if (tmp && tmp["type"] === "set") {
             return tmp["value"].reduce((result, value, index) => {
-                result += `${index + 1})  ${value}<br />`;
+                result += `${index + 1})  "${value}"<br />`;
                 return result;
             }, "");
-        } else if (tmp) {
+        } else if (tmp && tmp["type"] !== "set") {
             return "(error)  wrongtype operation against a key holding the wrong kind of value ";
         } else {
             return "(empty set)";
@@ -265,7 +273,9 @@ class Data {
             if (tmp && tmp["type"] === "set") {
                 result.push(tmp["value"]);
             } else if (tmp && tmp["type"] !== "set") {
-                return false;
+                throw new Error(
+                    "wrongtype operation against a key holding the wrong kind of value "
+                );
             } else if (!tmp) {
                 result.push([]);
             }

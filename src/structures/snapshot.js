@@ -6,7 +6,6 @@ class Snapshot {
     save(data) {
         if (data) {
             this.snapshot = data;
-
             return "OK";
         } else {
             return "(error) no image data";

@@ -10,7 +10,7 @@ const commands = {
             return data.set(key, value);
         },
         checkSyntax: cmd => {
-            let regex = /^(set)(\s[a-zA-Z0-9\-]+){2}$/g;
+            let regex = /^(set)(\s[^\s]+){2}$/g;
 
             return regex.test(cmd);
         },
@@ -25,7 +25,7 @@ const commands = {
             return data.get(key);
         },
         checkSyntax: cmd => {
-            let regex = /^(get)(\s[a-zA-Z0-9\-]+){1}$/g;
+            let regex = /^(get)(\s[^\s]+){1}$/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -39,7 +39,7 @@ const commands = {
             return data.llen(key);
         },
         checkSyntax: cmd => {
-            let regex = /^(llen)(\s[a-zA-Z0-9\-]+){1}$/g;
+            let regex = /^(llen)(\s[^\s]+){1}$/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -53,7 +53,7 @@ const commands = {
             return data.rpush(key, values);
         },
         checkSyntax: cmd => {
-            let regex = /^(rpush)(\s[a-zA-Z0-9\-]+)+/g;
+            let regex = /^(rpush)(\s[^\s]+)+/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -69,7 +69,7 @@ const commands = {
             return data.lpop(key);
         },
         checkSyntax: cmd => {
-            let regex = /^(lpop)(\s[a-zA-Z0-9\-]+){1}/g;
+            let regex = /^(lpop)(\s[^\s]+){1}$/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -83,7 +83,7 @@ const commands = {
             return data.rpop(key);
         },
         checkSyntax: cmd => {
-            let regex = /^(rpop)(\s[a-zA-Z0-9\-]+){1}/g;
+            let regex = /^(rpop)(\s[^\s]+){1}$/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -97,7 +97,7 @@ const commands = {
             return data.lrange(key, values);
         },
         checkSyntax: cmd => {
-            let regex = /^(lrange)(\s[a-zA-Z0-9\-]+){3}/g;
+            let regex = /^(lrange)(\s[^\s]+){3}$/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -113,7 +113,7 @@ const commands = {
             return data.sadd(key, values);
         },
         checkSyntax: cmd => {
-            let regex = /^(sadd)(\s[a-zA-Z0-9]+)+/g;
+            let regex = /^(sadd)(\s[^\s]+)(\s[^\s]+)+/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -129,7 +129,7 @@ const commands = {
             return data.scard(key, values);
         },
         checkSyntax: cmd => {
-            let regex = /^(scard)(\s[a-zA-Z0-9]+){1}/g;
+            let regex = /^(scard)(\s[^\s]+){1}$/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -143,7 +143,7 @@ const commands = {
             return data.smembers(key, values);
         },
         checkSyntax: cmd => {
-            let regex = /^(smembers)(\s[a-zA-Z0-9]+){1}/g;
+            let regex = /^(smembers)(\s[^\s]+){1}$/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -157,7 +157,7 @@ const commands = {
             return data.srem(key, values);
         },
         checkSyntax: cmd => {
-            let regex = /^(srem)(\s[a-zA-Z0-9]+)+/g;
+            let regex = /^(srem)(\s[^\s]+)(\s[^\s]+)+/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -172,7 +172,7 @@ const commands = {
             return data.sinter(values);
         },
         checkSyntax: cmd => {
-            let regex = /^(sinter)(\s[a-zA-Z0-9]+)+/g;
+            let regex = /^(sinter)(\s[^\s]+)+/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -186,7 +186,7 @@ const commands = {
             return data.keys();
         },
         checkSyntax: cmd => {
-            let regex = /^(keys)/g;
+            let regex = /^(keys)$/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -200,7 +200,7 @@ const commands = {
             return data.del(keys);
         },
         checkSyntax: cmd => {
-            let regex = /^(del)(\s[a-zA-Z0-9]+)+/g;
+            let regex = /^(del)(\s[^\s]+)+/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -214,7 +214,7 @@ const commands = {
             return data.flushdb();
         },
         checkSyntax: cmd => {
-            let regex = /^(flushdb)/g;
+            let regex = /^(flushdb)$/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -228,7 +228,7 @@ const commands = {
             return data.expire(key, seconds);
         },
         checkSyntax: cmd => {
-            let regex = /^(expire)(\s[a-zA-Z0-9]+){2}/g;
+            let regex = /^(expire)(\s[^\s]+){2}$/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -242,7 +242,7 @@ const commands = {
             return data.ttl(key);
         },
         checkSyntax: cmd => {
-            let regex = /^(ttl)(\s[a-zA-Z0-9]+){1}/g;
+            let regex = /^(ttl)(\s[^\s]+){1}$/g;
             return regex.test(cmd);
         },
         getParams: p => {

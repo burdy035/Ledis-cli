@@ -68,7 +68,7 @@ app.post("/send-command", (req, res) => {
     } catch (error) {
         res.json({
             success: false,
-            result: "(error) server error"
+            result: "(error) " + error.message
         });
     }
 });
