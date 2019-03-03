@@ -11,17 +11,26 @@ body {
 }
 
 #app {
-    height: 100%;
+    height: 100vh;
 }
 .container {
     height: 100%;
+    overflow: auto;
 }
 
 .command-container {
     display: flex;
     flex-direction: row;
+    padding: 3px 0px;
 }
 
+.input-line-last {
+    padding-bottom: 50px;
+}
+.guide-container {
+    margin-bottom: 20px;
+    margin-left: 5px;
+}
 .command-line {
     flex: 1;
     margin-left: 15px;
@@ -37,64 +46,6 @@ body {
     width: 602px;
     height: 402px;
 }
-
-/* #container output {
-    clear: both;
-    width: 100%;
+.cmd-result {
+    padding-left: 5px;
 }
-#container output h3 {
-    margin: 0;
-}
-#container output pre {
-    margin: 0;
-}
-.input-line {
-    display: -webkit-box;
-    -webkit-box-orient: horizontal;
-    -webkit-box-align: stretch;
-    display: -moz-box;
-    -moz-box-orient: horizontal;
-    -moz-box-align: stretch;
-    display: box;
-    box-orient: horizontal;
-    box-align: stretch;
-    clear: both;
-}
-.input-line > div:nth-child(2) {
-    -webkit-box-flex: 1;
-    -moz-box-flex: 1;
-    box-flex: 1;
-}
-.prompt {
-    white-space: nowrap;
-    color: #96b38a;
-    margin-right: 7px;
-    display: -webkit-box;
-    -webkit-box-pack: center;
-    -webkit-box-orient: vertical;
-    display: -moz-box;
-    -moz-box-pack: center;
-    -moz-box-orient: vertical;
-    display: box;
-    box-pack: center;
-    box-orient: vertical;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
-}
-.cmdline {
-    outline: none;
-    background-color: transparent;
-    margin: 0;
-    width: 100%;
-    font: inherit;
-    border: none;
-    color: inherit;
-}
-.ls-files {
-    height: 45px;
-    -webkit-column-width: 100px;
-    -moz-column-width: 100px;
-    -o-column-width: 100px;
-    column-width: 100px;
-} */

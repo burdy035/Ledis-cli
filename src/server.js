@@ -76,13 +76,11 @@ app.post("/send-command", (req, res) => {
 app.listen(process.env.PORT || port, err => {
     if (err) {
         console.log(
-            `Can not listen at http://localhost:${process.env.SERVER_PORT ||
-                port}`
+            `Can not listen at http://localhost:${process.env.PORT || port}`
         );
     } else {
         console.log(
-            `Server is running at http://localhost:${process.env.SERVER_PORT ||
-                port}`
+            `Server is running at http://localhost:${process.env.PORT || port}`
         );
     }
 });

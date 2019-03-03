@@ -14,16 +14,19 @@
     <body>
         <div id="app" class="a">
             <div class="container" v-on:click="focusTerminal">
+                <div class="guide-container">
+                    <h1>Ledis-cli</h1>
+                    <span>Enter "help" for list of commands</span>
+                </div>
                 <div
                     v-for="(c, index) in commands"
                     v-if="!c.deleted"
                     id="input-line"
-                    class="input-line"
+                    v-bind:class="[index === commands.length - 1 ? 'input-line-last' : 'input-line']"
                     :key="c.id"
                 >
                     <div class="command-container">
                         <div class="prompt">{{ user }}</div>
-
                         <input
                             ref="fields"
                             class="command-line"
@@ -45,7 +48,7 @@
         var app = new Vue({
             el: "#app",
             data: {
-                user: "[localhost@user] $ ",
+                user: "[ledis-cli @user] $ ",
                 commands: [],
                 i: 0,
                 historyCount: 0,

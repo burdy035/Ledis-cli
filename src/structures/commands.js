@@ -4,11 +4,13 @@ import snapshot from "./snapshot";
 
 const commands = {
     set: {
+        type: "String",
+        args: "[key] [value]",
         method: (key, value) => {
             return data.set(key, value);
         },
         checkSyntax: cmd => {
-            let regex = /^(set)(\s[a-zA-Z0-9]+){2}$/g;
+            let regex = /^(set)(\s[a-zA-Z0-9\-]+){2}$/g;
 
             return regex.test(cmd);
         },
@@ -17,11 +19,13 @@ const commands = {
         }
     },
     get: {
+        type: "String",
+        args: "[key]",
         method: key => {
             return data.get(key);
         },
         checkSyntax: cmd => {
-            let regex = /^(get)(\s[a-zA-Z0-9]+){1}$/g;
+            let regex = /^(get)(\s[a-zA-Z0-9\-]+){1}$/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -29,11 +33,13 @@ const commands = {
         }
     },
     llen: {
+        type: "List",
+        args: "[key]",
         method: key => {
             return data.llen(key);
         },
         checkSyntax: cmd => {
-            let regex = /^(llen)(\s[a-zA-Z0-9]+){1}$/g;
+            let regex = /^(llen)(\s[a-zA-Z0-9\-]+){1}$/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -41,11 +47,13 @@ const commands = {
         }
     },
     rpush: {
+        type: "List",
+        args: "[key] [value] [value...]",
         method: (key, values) => {
             return data.rpush(key, values);
         },
         checkSyntax: cmd => {
-            let regex = /^(rpush)(\s[a-zA-Z0-9]+)+/g;
+            let regex = /^(rpush)(\s[a-zA-Z0-9\-]+)+/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -55,11 +63,13 @@ const commands = {
         }
     },
     lpop: {
+        type: "List",
+        args: "[key]",
         method: key => {
             return data.lpop(key);
         },
         checkSyntax: cmd => {
-            let regex = /^(lpop)(\s[a-zA-Z0-9]+){1}/g;
+            let regex = /^(lpop)(\s[a-zA-Z0-9\-]+){1}/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -67,11 +77,13 @@ const commands = {
         }
     },
     rpop: {
+        type: "List",
+        args: "[key]",
         method: key => {
             return data.rpop(key);
         },
         checkSyntax: cmd => {
-            let regex = /^(rpop)(\s[a-zA-Z0-9]+){1}/g;
+            let regex = /^(rpop)(\s[a-zA-Z0-9\-]+){1}/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -79,11 +91,13 @@ const commands = {
         }
     },
     lrange: {
+        type: "List",
+        args: "[key] [start] [stop]",
         method: (key, values) => {
             return data.lrange(key, values);
         },
         checkSyntax: cmd => {
-            let regex = /^(lrange)(\s[a-zA-Z0-9]+){3}/g;
+            let regex = /^(lrange)(\s[a-zA-Z0-9\-]+){3}/g;
             return regex.test(cmd);
         },
         getParams: p => {
@@ -93,6 +107,8 @@ const commands = {
         }
     },
     sadd: {
+        type: "Set",
+        args: "[key] [value] [value...]",
         method: (key, values) => {
             return data.sadd(key, values);
         },
@@ -107,6 +123,8 @@ const commands = {
         }
     },
     scard: {
+        type: "Set",
+        args: "[key]",
         method: (key, values) => {
             return data.scard(key, values);
         },
@@ -119,6 +137,8 @@ const commands = {
         }
     },
     smembers: {
+        type: "Set",
+        args: "[key]",
         method: (key, values) => {
             return data.smembers(key, values);
         },
@@ -131,6 +151,8 @@ const commands = {
         }
     },
     srem: {
+        type: "Set",
+        args: "[key] [member] [member...]",
         method: (key, values) => {
             return data.srem(key, values);
         },
@@ -144,6 +166,8 @@ const commands = {
         }
     },
     sinter: {
+        type: "Set",
+        args: "[key] [key] [key...]",
         method: values => {
             return data.sinter(values);
         },
@@ -156,6 +180,8 @@ const commands = {
         }
     },
     keys: {
+        type: "Keys",
+        args: "",
         method: () => {
             return data.keys();
         },
@@ -168,6 +194,8 @@ const commands = {
         }
     },
     del: {
+        type: "Keys",
+        args: "[key] [keys...]",
         method: keys => {
             return data.del(keys);
         },
@@ -180,6 +208,8 @@ const commands = {
         }
     },
     flushdb: {
+        type: "Keys",
+        args: "",
         method: () => {
             return data.flushdb();
         },
@@ -192,6 +222,8 @@ const commands = {
         }
     },
     expire: {
+        type: "Keys",
+        args: "[key] [seconds]",
         method: (key, seconds) => {
             return data.expire(key, seconds);
         },
@@ -204,6 +236,8 @@ const commands = {
         }
     },
     ttl: {
+        type: "Keys",
+        args: "[key]",
         method: key => {
             return data.ttl(key);
         },
@@ -216,6 +250,8 @@ const commands = {
         }
     },
     save: {
+        type: "Snapshot",
+        args: "",
         method: data => {
             return snapshot.save(data);
         },
@@ -225,6 +261,8 @@ const commands = {
         }
     },
     restore: {
+        type: "Snapshot",
+        args: "",
         method: () => {
             return snapshot.restore();
         },
@@ -241,7 +279,7 @@ const commands = {
 export const parseSyntax = syntax => {
     if (/\s/.test(syntax)) {
         syntax = syntax.trim().toLowerCase();
-
+        syntax = syntax.replace(/\s+/g, " ");
         return {
             syntax: syntax,
             command: syntax.substr(0, syntax.indexOf(" ")),
@@ -252,4 +290,38 @@ export const parseSyntax = syntax => {
     }
 };
 
-export default commands;
+export default {
+    ...commands,
+    help: {
+        method: () => {
+            let groupByType = Object.keys(commands).reduce((result, k) => {
+                let type = commands[k].type;
+                let args = commands[k].args;
+                if (!result[type]) {
+                    result[type] = [];
+                }
+
+                result[type].push(`${k} ${args}`);
+
+                return result;
+            }, {});
+
+            return Object.keys(groupByType).reduce((outcome, type) => {
+                let tmp = groupByType[type].reduce((res, comd) => {
+                    res += `&nbsp; &nbsp;${comd}  <br />`;
+                    return res;
+                }, "");
+
+                outcome += `${type}: <br />${tmp}`;
+                return outcome;
+            }, "");
+        },
+        checkSyntax: cmd => {
+            let regex = /^(help)$/g;
+            return regex.test(cmd);
+        },
+        getParams: p => {
+            return [];
+        }
+    }
+};

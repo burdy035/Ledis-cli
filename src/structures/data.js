@@ -2,30 +2,34 @@ class Data {
     constructor() {
         this.data = {};
 
-        this.expireKeys = {};
+        this.watchedKeys = {};
 
-        this.cronExpiration();
+        this.cronToCheckExpiration();
     }
 
-    cronExpiration() {
+    //cron job to check expiration.
+
+    cronToCheckExpiration() {
         setInterval(() => {
-            const keys = Object.keys(this.expireKeys);
+            const keys = Object.keys(this.watchedKeys);
 
             if (keys.length) {
-                let result = this.lazyExpiration(keys);
+                let randomKey = this.getRandomKey(this.watchedKeys);
 
-                if (result.length) {
-                    this.expireKeys = this.removeItemsFromObject(
+                let result = this.lazyExpiration(randomKey);
+
+                if (result) {
+                    this.watchedKeys = this.removeItemsFromObject(
                         result,
-                        this.expireKeys
+                        this.watchedKeys
                     );
                 }
             }
-        }, 1000);
+        }, 100);
     }
 
     keys() {
-        let keys = Object.keys(this.data).map(k => k);
+        let keys = this.checkIsExpireKeys();
 
         return keys.length
             ? keys.reduce((result, k, index) => {
@@ -56,14 +60,14 @@ class Data {
         let tmp = this.data[key];
         if (tmp) {
             tmp["ttl"] = new Date().getTime() + second * 1000;
-            this.expireKeys[key] = true;
+            this.watchedKeys[key] = true;
             return "(interger) 1";
         } else {
             return "(interger) 0";
         }
     }
     ttl(key) {
-        let tmp = this.data[key];
+        let tmp = this.checkIsExpireKey(key);
         if (tmp && tmp["ttl"]) {
             let current = new Date().getTime();
             let ttl = Math.ceil((tmp["ttl"] - current) / 1000);
@@ -90,19 +94,19 @@ class Data {
     }
 
     get(key) {
-        this.expireKeys = this.checkIsExpireKey(key, this.expireKeys);
+        let tmp = this.checkIsExpireKey(key);
 
-        return this.data[key] ? this.data[key].value : "(nil)";
+        return tmp ? tmp.value : "(nil)";
     }
 
     // list methods
 
     llen(key) {
-        this.expireKeys = this.checkIsExpireKey(key, this.expireKeys);
+        let tmp = this.checkIsExpireKey(key);
 
-        if (this.data[key]) {
-            return this.data[key].type === "list"
-                ? `(interger) ${this.data[key]["value"].length}`
+        if (tmp) {
+            return tmp.type === "list"
+                ? `(interger) ${tmp["value"].length}`
                 : "(error)  wrongtype operation against a key holding the wrong kind of value ";
         } else {
             return "(interger) 0";
@@ -110,35 +114,36 @@ class Data {
     }
 
     rpush(key, values) {
+        let tmp = this.checkIsExpireKey(key);
+
         let result = "";
-        if (this.data[key]) {
-            if (this.data[key]["type"] === "list") {
-                this.data[key]["value"].push(...values);
-                result = `(interger) ${this.data[key]["value"].length}`;
+        if (tmp) {
+            if (tmp["type"] === "list") {
+                tmp["value"].push(...values);
+                result = `(interger) ${tmp["value"].length}`;
             } else {
                 result =
                     "(error)  wrongtype operation against a key holding the wrong kind of value ";
             }
         } else {
-            this.data[key] = {
+            tmp = {
                 type: "list",
                 value: []
             };
-            this.data[key]["value"].push(...values);
-            result = `(interger) ${this.data[key]["value"].length}`;
+            tmp["value"].push(...values);
+            result = `(interger) ${tmp["value"].length}`;
         }
+        this.data[key] = tmp;
+
         return result;
     }
 
     lpop(key) {
-        this.expireKeys = this.checkIsExpireKey(key, this.expireKeys);
+        let tmp = this.checkIsExpireKey(key);
 
-        let listK = this.data[key];
-
-        if (listK && listK["type"] === "list") {
-            listK["value"].shift();
-            return `(interger) ${listK["value"].length}`;
-        } else if (listK) {
+        if (tmp && tmp["type"] === "list") {
+            return `"${tmp["value"].shift()}"`;
+        } else if (tmp) {
             return "(error)  wrongtype operation against a key holding the wrong kind of value ";
         } else {
             return "(nil)";
@@ -146,14 +151,11 @@ class Data {
     }
 
     rpop(key) {
-        this.expireKeys = this.checkIsExpireKey(key, this.expireKeys);
+        let tmp = this.checkIsExpireKey(key);
 
-        let listK = this.data[key];
-
-        if (listK && listK["type"] === "list") {
-            listK["value"].pop();
-            return `(interger) ${listK["value"].length}`;
-        } else if (listK) {
+        if (tmp && tmp["type"] === "list") {
+            return `"${tmp["value"].pop()}"`;
+        } else if (tmp) {
             return "(error)  wrongtype operation against a key holding the wrong kind of value ";
         } else {
             return "(nil)";
@@ -161,44 +163,52 @@ class Data {
     }
 
     lrange(key, values) {
-        this.expireKeys = this.checkIsExpireKey(key, this.expireKeys);
+        let tmp = this.checkIsExpireKey(key);
 
-        let listK = this.data[key];
-        let start = values[0];
-        let stop = values[1];
+        let start = parseInt(values[0]);
+        let stop = parseInt(values[1]);
         let result = "";
-        if (!Number(start) || !Number(stop)) {
-            result = "Error: start or stop value is not an integer";
+        if (!Number.isInteger(start) || !Number.isInteger(stop)) {
+            result = "(error) start or stop value is not an integer";
+        } else if (start < 0 || stop < 0) {
+            result = "(empty list)";
         } else {
-            if (listK && listK["type"] === "list") {
-                listK["value"].forEach((value, index) => {
-                    result += `${index})  ${value}<br />`;
-                });
-            } else if (listK) {
+            if (tmp && tmp["type"] === "list") {
+                let lrange = tmp["value"].slice(start, stop + 1);
+
+                result = lrange.reduce((re, value, index) => {
+                    re += `${index})  "${value}"<br />`;
+                    return re;
+                }, "");
+            } else if (tmp) {
                 result =
                     "(error)  wrongtype operation against a key holding the wrong kind of value ";
             } else {
                 result = "(empty list)";
             }
         }
-
         return result;
     }
 
     // sets methods
     sadd(key, values) {
-        let tmp = this.data[key] || {
-            type: "sets",
-            value: []
-        };
-        let setK = tmp["value"];
+        let tmp = this.checkIsExpireKey(key);
 
-        setK = values.reduce((result, value) => {
-            if (!setK.includes(value)) {
+        if (!tmp) {
+            tmp = {
+                type: "set",
+                value: []
+            };
+        } else if (tmp.type !== "set") {
+            return "(error)  wrongtype operation against a key holding the wrong kind of value ";
+        }
+
+        tmp.value = values.reduce((result, value) => {
+            if (!tmp.value.includes(value)) {
                 result.push(value);
             }
             return result;
-        }, setK);
+        }, tmp.value || []);
 
         this.data[key] = tmp;
 
@@ -206,24 +216,24 @@ class Data {
     }
 
     scard(key) {
-        this.expireKeys = this.checkIsExpireKey(key, this.expireKeys);
+        let tmp = this.checkIsExpireKey(key);
 
-        return `(interger) ${
-            this.data[key] ? this.data[key]["value"].length : 0
-        }`;
+        if (tmp && tmp["type"] !== "set") {
+            return "(error)  wrongtype operation against a key holding the wrong kind of value ";
+        }
+
+        return `(interger) ${tmp ? tmp["value"].length : 0}`;
     }
 
     smembers(key) {
-        this.expireKeys = this.checkIsExpireKey(key, this.expireKeys);
+        let tmp = this.checkIsExpireKey(key);
 
-        let setK = this.data[key];
-
-        if (setK && setK["type"] === "sets") {
-            return this.data[key]["value"].reduce((result, value, index) => {
+        if (tmp && tmp["type"] === "set") {
+            return tmp["value"].reduce((result, value, index) => {
                 result += `${index + 1})  ${value}<br />`;
                 return result;
             }, "");
-        } else if (setK) {
+        } else if (tmp) {
             return "(error)  wrongtype operation against a key holding the wrong kind of value ";
         } else {
             return "(empty set)";
@@ -231,20 +241,18 @@ class Data {
     }
 
     srem(key, values) {
-        this.expireKeys = this.checkIsExpireKey(key, this.expireKeys);
+        let tmp = this.checkIsExpireKey(key);
 
-        let setK = this.data[key];
-
-        if (setK && setK["type"] === "sets") {
+        if (tmp && tmp["type"] === "set") {
             let removed = values.filter(value => {
-                if (setK["value"].includes(value)) {
-                    let idx = setK["value"].indexOf(value);
+                if (tmp["value"].includes(value)) {
+                    let idx = tmp["value"].indexOf(value);
 
-                    return setK["value"].splice(idx, 1);
+                    return tmp["value"].splice(idx, 1);
                 }
             });
             return `(interger) ${removed.length}`;
-        } else if (setK) {
+        } else if (tmp) {
             return "(error)  wrongtype operation against a key holding the wrong kind of value ";
         } else {
             return `(interger) 0`;
@@ -252,25 +260,34 @@ class Data {
     }
 
     sinter(keys) {
-        this.expireKeys = this.checkIsExpireKey(key, this.expireKeys);
-
-        let values = keys.reduce((args, k) => {
-            if (this.data[k] && this.data[k]["type"] === "sets") {
-                args.push(this.data[k]["value"]);
+        let values = keys.reduce((result, k) => {
+            let tmp = this.checkIsExpireKey(k);
+            if (tmp && tmp["type"] === "set") {
+                result.push(tmp["value"]);
+            } else if (tmp && tmp["type"] !== "set") {
+                return false;
+            } else if (!tmp) {
+                result.push([]);
             }
-            return args;
+            return result;
         }, []);
 
-        let res = values.reduce((re, arg) => {
-            return re.filter(value => {
-                return arg.includes(value);
-            });
-        });
+        if (values) {
+            let interact = values.slice(1).reduce((result, set) => {
+                return set.filter(v => {
+                    return result.includes(v);
+                });
+            }, values[0] || []);
 
-        return res.reduce((result, value, index) => {
-            result += `${index + 1})  ${value}<br />`;
-            return result;
-        }, "");
+            return interact.length
+                ? interact.reduce((result, value, index) => {
+                      result += `${index + 1})  "${value}"<br />`;
+                      return result;
+                  }, "")
+                : "(empty set or list)";
+        } else {
+            return "(error)  wrongtype operation against a key holding the wrong kind of value ";
+        }
     }
 
     // ultils
@@ -298,40 +315,57 @@ class Data {
     }
 
     lazyExpiration(key) {
-        if (Array.isArray(key)) {
-            const deletedKey = key.reduce((commulator, k) => {
-                let tmp = this.data[k];
-                if (tmp && tmp["ttl"]) {
-                    let current = new Date().getTime();
-                    let ttl = Math.ceil((tmp["ttl"] - current) / 1000);
-                    if (ttl < 0) {
-                        delete this.data[k];
-                        commulator.push(k);
-                    }
-                }
-                return commulator;
-            }, []);
-            return deletedKey;
-        } else {
-            const tmp = this.data[key];
+        const tmp = this.data[key];
+        if (tmp && tmp["ttl"]) {
+            let current = new Date().getTime();
+            let ttl = Math.ceil((tmp["ttl"] - current) / 1000);
+            if (ttl < 0) {
+                delete this.data[key];
+                return key;
+            }
+        }
+        return false;
+    }
+
+    checkIsExpireKeys() {
+        const keys = Object.keys(this.watchedKeys);
+        const expiredKeys = keys.reduce((result, key) => {
+            let tmp = this.data[key];
             if (tmp && tmp["ttl"]) {
                 let current = new Date().getTime();
                 let ttl = Math.ceil((tmp["ttl"] - current) / 1000);
                 if (ttl < 0) {
                     delete this.data[key];
-                    return key;
+                    result.push(key);
                 }
             }
-        }
+
+            return result;
+        }, []);
+
+        this.watchedKeys = this.removeItemsFromObject(
+            expiredKeys,
+            this.watchedKeys
+        );
+
+        return Object.keys(this.data);
     }
 
-    checkIsExpireKey(key, expireKeys) {
-        let isExpire = this.lazyExpiration(key);
-
-        if (isExpire) {
-            return this.removeItemsFromObject(isExpire, expireKeys);
+    checkIsExpireKey(key) {
+        let isExpired = this.lazyExpiration(key);
+        if (isExpired) {
+            this.watchedKeys = this.removeItemsFromObject(
+                isExpired,
+                this.watchedKeys
+            );
         }
-        return expireKeys;
+        return this.data[key];
+    }
+
+    getRandomKey(dict) {
+        let keys = Object.keys(dict);
+
+        return keys[Math.floor(keys.length * Math.random())];
     }
 }
 
