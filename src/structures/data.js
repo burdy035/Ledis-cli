@@ -28,6 +28,8 @@ class Data {
         }, 100);
     }
 
+    // data expiration
+
     keys() {
         let keys = this.checkIsExpireKeys();
 
@@ -91,6 +93,8 @@ class Data {
             return "(interger) -2";
         }
     }
+
+    // string methods
 
     set(key, value) {
         this.data[key] = {
@@ -198,7 +202,7 @@ class Data {
         return result;
     }
 
-    // sets methods
+    // set methods
     sadd(key, values) {
         let tmp = this.checkIsExpireKey(key);
 
